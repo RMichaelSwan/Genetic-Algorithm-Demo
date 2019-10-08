@@ -40,7 +40,7 @@ function setup()
   obstacles.push(new Obstacle(0,scale*200,scale*150,scale*20));
   obstacles.push(new Obstacle(scale*630,scale*70,scale*200,scale*150));
   obstacles.push(new Obstacle(scale*450,0,scale*70,scale*110));
-  test = new Population(500, goal);
+  test = new Population(200, goal);
 }
 function draw()
 {
