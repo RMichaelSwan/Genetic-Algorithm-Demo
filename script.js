@@ -1,28 +1,55 @@
 //TODO add console output window/log to browser display
 //TODO add some user options for obstacles, start position, goal position, swarm size, etc. along with some neat presets.
-//TODO add scaling to handle any browser size
+//TODO improve evolutionary algorithm and/or add options for different variations (e.g. allowing longer lived mutations)
+//TODO improve collision system to detect any movement that would phase through an obstacle
+
+let defaultWidth = 1200
+let defaultHeight = 800
+let scaleRatioWH = defaultWidth/defaultHeight
+
+let widthSet = defaultWidth
+let heightSet = defaultHeight
+let scale = 1 //scale
+let obstacles = []
+
+function scaleSetup()
+{
+  if (windowWidth/windowHeight > scaleRatioWH)
+  {
+    heightSet = windowHeight
+    widthSet = heightSet * scaleRatioWH
+  }
+  else
+  {
+    widthSet = windowWidth
+    heightSet = widthSet / scaleRatioWH
+  }
+  scale = widthSet / defaultWidth
+}
 
 function setup()
 {
-  createCanvas(1200, 800);
-  
-  goal = new Goal(600,10);
-  obs = new Obstacle(180,380,680,20);
-  obs2 = new Obstacle(800,500,300,20);
-  obs3 = new Obstacle(0,200,150,20);
-  obs4 = new Obstacle(630,70,200,150);
-  obs5 = new Obstacle(450,0,70,110);
-  test = new Population(1000, goal);
+  scaleSetup()
+  createCanvas(widthSet, heightSet);
+  print("Scaled to ", widthSet, "x", heightSet, "with size scaling of ", scale)
+
+
+  goal = new Goal(scale*600,scale*10);
+  obstacles.push(new Obstacle(scale*180,scale*380,scale*680,scale*20));
+  obstacles.push(new Obstacle(scale*800,scale*500,scale*300,scale*20));
+  obstacles.push(new Obstacle(0,scale*200,scale*150,scale*20));
+  obstacles.push(new Obstacle(scale*630,scale*70,scale*200,scale*150));
+  obstacles.push(new Obstacle(scale*450,0,scale*70,scale*110));
+  test = new Population(500, goal);
 }
 function draw()
 {
   background(255);
   goal.show();
-  obs.show();
-  obs2.show();
-  obs3.show();
-  obs4.show();
-  obs5.show();
+  for (let i = 0, len = obstacles.length; i < len; i++)
+  {
+    obstacles[i].show()
+  }
   if (test.allDotsDead())
   {
     test.calculateFitness();
@@ -69,8 +96,6 @@ class Goal
 
 class Brain
 {
-  
-  
   constructor(size)
   {
     this.directions = []
@@ -123,7 +148,7 @@ class Dot
     this.fitness = 0.0;
 
     this.brain = new Brain(400);
-    this.pos = createVector(width/2,height-10);
+    this.pos = createVector(width/2,height-10); //default start is center bottom of screen
     this.vel = createVector(0,0);
     this.acc = createVector(0,0);
     this.finish = goal; //should be a Goal object
@@ -155,8 +180,27 @@ class Dot
       this.dead = true; 
     }
     this.vel.add(this.acc);
-    this.vel.limit(15);
+    //if velocity is too high, our rudimentary collision system begins to fail.
+    this.vel.limit(15*scale); 
     this.pos.add(this.vel);
+  }
+
+  ObstacleCollided()
+  {
+    let obs_pos, obs_size, upperX, upperY
+    for(let i=0, len=obstacles.length; i < len; i++)
+    {
+      obs_pos = obstacles[i].pos
+      obs_size = obstacles[i].size
+      upperX = obs_pos.x + obs_size.x
+      upperY = obs_pos.y + obs_size.y
+      if(this.pos.x > obs_pos.x && this.pos.x < upperX &&
+         this.pos.y > obs_pos.y && this.pos.y < upperY)
+      {
+        return true;
+      }
+    }
+    return false
   }
 
   update()
@@ -172,11 +216,7 @@ class Dot
       {
         this.reachedGoal = true;
       }
-      else if((this.pos.x > 180 && this.pos.x < 860 && this.pos.y > 380  && this.pos.y < 400) ||
-              (this.pos.x > 800 && this.pos.x < 1100 && this.pos.y > 500  && this.pos.y < 520) ||
-              (this.pos.x > 0 && this.pos.x < 150 && this.pos.y > 200  && this.pos.y < 220) ||
-              (this.pos.x > 630 && this.pos.x < 830 && this.pos.y > 70  && this.pos.y < 220) ||
-              (this.pos.x > 450 && this.pos.x < 520 && this.pos.y > 0  && this.pos.y < 110)) //TODO move this to a standarized obstacle collision check
+      else if(this.ObstacleCollided())
       {
         this.dead = true;        
       }
