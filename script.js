@@ -11,17 +11,19 @@ let widthSet = defaultWidth
 let heightSet = defaultHeight
 let scale = 1 //scale
 let obstacles = []
+let running = true
 
 function scaleSetup()
 {
+  const MARGIN = 10; //pixels we leave off for the margin
   if (windowWidth/windowHeight > scaleRatioWH)
   {
-    heightSet = windowHeight
+    heightSet = windowHeight - MARGIN;
     widthSet = heightSet * scaleRatioWH
   }
   else
   {
-    widthSet = windowWidth
+    widthSet = windowWidth - MARGIN;
     heightSet = widthSet / scaleRatioWH
   }
   scale = widthSet / defaultWidth
@@ -30,8 +32,12 @@ function scaleSetup()
 function setup()
 {
   scaleSetup()
-  createCanvas(widthSet, heightSet);
+  const canvas = createCanvas(widthSet, heightSet);
+  canvas.parent('main');
   print("Scaled to ", widthSet, "x", heightSet, "with size scaling of ", scale)
+  button = createButton('Pause');
+  button.position(50, 50);
+  button.mousePressed(pauseResume);
 
 
   goal = new Goal(scale*600,scale*10);
@@ -45,22 +51,37 @@ function setup()
 function draw()
 {
   background(255);
+  fill(0,0,0,0);
+  rect(0,0,widthSet,heightSet); //border
+
   goal.show();
   for (let i = 0, len = obstacles.length; i < len; i++)
   {
     obstacles[i].show()
   }
-  if (test.allDotsDead())
-  {
-    test.calculateFitness();
-    test.naturalSelection();
-    test.mutateDots();
-  }
-  else
-  {
-    test.update();
-    test.show();
-  }
+  
+    if (test.allDotsDead())
+    {
+      test.calculateFitness();
+      test.naturalSelection();
+      test.mutateDots();
+    }
+    else
+    {
+      if (running) 
+      {
+        test.update();
+      }
+      test.show();
+    }
+  
+}
+
+
+function pauseResume() 
+{
+  running = !running;
+  running ? this.html('Pause') : this.html('Resume');
 }
 
 class Obstacle
