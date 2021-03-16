@@ -11,6 +11,7 @@ let widthSet = defaultWidth
 let heightSet = defaultHeight
 let scale = 1 //scale
 let obstacles = []
+let brainNum = 1000
 let running = true
 
 function scaleSetup()
@@ -168,7 +169,7 @@ class Dot
     this.isBest = false;
     this.fitness = 0.0;
 
-    this.brain = new Brain(400);
+    this.brain = new Brain(brainNum);
     this.pos = createVector(width/2,height-10); //default start is center bottom of screen
     this.vel = createVector(0,0);
     this.acc = createVector(0,0);
